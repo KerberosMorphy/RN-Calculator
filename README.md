@@ -1,5 +1,6 @@
 # RN-Calculator
-First apps with React Native, a Calcultor that used Android Native Java language
+First apps with React Native, a Calcultor that used Android Native Java language.
+
 Base on [Kyle Bank Tutorial](https://github.com/KyleBanks/ReactCalculator/).
 
 ## Kyle Bank Original License
