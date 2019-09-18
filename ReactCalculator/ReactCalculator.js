@@ -4,13 +4,14 @@ import {
     Text
 } from 'react-native';
 import Style from './Style';
+import RNJavaCalculator from './java-calculator';
 import InputButton from './InputButton';
 
 const inputButtons = [
     [1, 2, 3, 'CE', 'C'],
     [4, 5, 6, '/', '+'],
     [7, 8, 9, '*', '-'],
-    ['(', ')', 0,  '.', '=']
+    ['', 0, '',  '.', '=']
 ];
 
 /**
@@ -26,7 +27,7 @@ export default class ReactCalculator extends Component {
             previousInputValue: 0,
             inputValue: 0,
             selectedSymbol: null,
-            resultState: false,
+            numberState: true,
             decimalState: 0
         }
 
@@ -74,19 +75,18 @@ export default class ReactCalculator extends Component {
 
     _handleNumberInput(num) {
         let inputValue = num;
-        if (!this.state.resultState) {
-            if (this.state.decimalState === 0) {
-                inputValue = (this.state.inputValue * 10) + num;
-            }
-            else {
-                inputValue = (this.state.inputValue) + (num / (10 * this.state.decimalState));
-                this.state.decimalState ++;
-            }
+        if (this.state.numberState) {
+            let decimalTemp = this.state.decimalState;
+            let iV = this.state.inputValue;
+            RNJavaCalculator.numberImputHandler(num, this.state.inputValue, this.state.decimalState, (result, decimal) => {
+                this.resultHandler(result, decimal)
+            });
+        } else {
+            this.setState({
+                inputValue: inputValue,
+                numberState: true
+            });
         }
-        this.setState({
-            inputValue: inputValue,
-            resultState: false
-        });
     }
 
     _handleStringInput(str) {
@@ -95,44 +95,21 @@ export default class ReactCalculator extends Component {
             case '*':
             case '+':
             case '-':
-                this.setState({
-                    selectedSymbol: str,
-                    previousInputValue: this.state.inputValue,
-                    inputValue: 0,
-                    decimalState: 0,
-                    resultState: false
+            case '=':
+                let tmpNum = this.state.inputValue;
+                RNJavaCalculator.calculator(tmpNum, str, (result) => {
+                    this.resultHandler(result)
                 });
                 break;
-            
             case '.':
                 this.setState({
                     decimalState: 1,
-                    resultState: false
+                    numberState: true
                 });
                 break;
-
-            case '=':
-                let symbol = this.state.selectedSymbol,
-                    inputValue = this.state.inputValue,
-                    previousInputValue = this.state.previousInputValue;
-
-                if (!symbol) {
-                    return;
-                }
-
-                this.setState({
-                    previousInputValue: 0,
-                    inputValue: eval(previousInputValue + symbol + inputValue),
-                    selectedSymbol: null,
-                    decimalState: 0,
-                    resultState: true
-                });
-                break;
-
             case 'CE':
                 this.setState(this.initialState);
                 break;
-
             case 'C':
                 if (this.state.resultState) {
                     this.setState(this.initialState);
@@ -143,5 +120,13 @@ export default class ReactCalculator extends Component {
                 });
                 break;
         }
+    }
+    
+    resultHandler(result, decimal) {
+        this.setState({ 
+            inputValue: result,
+            decimalState: decimal,
+            numberState: true
+        });
     }
 }
